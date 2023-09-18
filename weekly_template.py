@@ -2,9 +2,6 @@ import sys
 from datetime import datetime
 from datetime import timedelta
 
-# 1. Create a function called get_weekly_dates that takes in a date and returns a list of dates for the week starting on the given date.
-# raise an exception if the starting date isn't a monday
-
 def get_weekly_dates(date):
     weekly_dates = []
     for i in range(7):
