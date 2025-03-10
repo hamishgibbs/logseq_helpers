@@ -1,6 +1,8 @@
 import sys
 from datetime import datetime
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
 def get_weekly_dates(date):
     weekly_dates = []
@@ -68,27 +70,26 @@ def format_date_with_ordinal(date):
     day_with_ordinal = ordinal(date.day)
     return date.strftime(f'%b {day_with_ordinal}, %Y')
 
+def compute_monday(date):
+    """Return the Monday of the week for the given date."""
+    return date - timedelta(days=date.weekday())
+
 def main():
-    if len(sys.argv) < 2:
-        raise Exception("Specify root directory of logseq graph")
+    load_dotenv()
+    logseq_path = os.getenv("LOGSEQ_GRAPH_PATH")
+    if not logseq_path:
+        raise Exception("LOGSEQ_GRAPH_PATH is not set in .env file")
 
-    logseq_path = sys.argv[1]
-
-    if len(sys.argv) == 3:
-        date = datetime.strptime(sys.argv[2], '%Y-%m-%d')
-    else:
-        date = datetime.today()
-   
-    if date.weekday() != 0:
-        raise Exception("Starting date must be a Monday")
+    user_date = datetime.today()
+    monday_date = compute_monday(user_date)
     
-    weekly_plan_fn = f"{logseq_path}/pages/Weekly Plan {format_date_with_ordinal(date)}.md"
+    weekly_plan_fn = f"{logseq_path}/pages/Weekly Plan {format_date_with_ordinal(monday_date)}.md"
     print(weekly_plan_fn)
     with open(weekly_plan_fn, "a") as f:
-        f.write("\n".join(get_weekly_plan_template(date)))
+        f.write("\n".join(get_weekly_plan_template(monday_date)))
     print('✅ Created Weekly Plan')
 
-    for date in get_weekly_dates(date):
+    for date in get_weekly_dates(monday_date):
         day_journal_fn = f"{logseq_path}/journals/{date.strftime('%Y_%m_%d')}.md"
         with open(day_journal_fn, "a") as f:
             f.write("\n".join(get_daily_plan_template(date)))
