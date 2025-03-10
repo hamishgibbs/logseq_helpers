@@ -55,21 +55,44 @@ def get_daily_plan_template(date):
         "#### Other Items", 
         "#### Notes"]
 
+def ordinal(n):
+    """Return the ordinal number string of n, for example 1 -> 1st, 2 -> 2nd."""
+    if 10 <= n % 100 <= 20:
+        suffix = 'th'
+    else:
+        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
+    return str(n) + suffix
+
+def format_date_with_ordinal(date):
+    """Return the formatted date with the day having the appropriate ordinal suffix."""
+    day_with_ordinal = ordinal(date.day)
+    return date.strftime(f'%b {day_with_ordinal}, %Y')
+
 def main():
-    if len(sys.argv) > 1:
-        date = datetime.strptime(sys.argv[1], '%Y-%m-%d')
+    if len(sys.argv) < 2:
+        raise Exception("Specify root directory of logseq graph")
+
+    logseq_path = sys.argv[1]
+
+    if len(sys.argv) == 3:
+        date = datetime.strptime(sys.argv[2], '%Y-%m-%d')
     else:
         date = datetime.today()
    
     if date.weekday() != 0:
         raise Exception("Starting date must be a Monday")
     
-    print("\033[92m>>> WEEKLY PLAN <<<\033[0m")
-    print("\n".join(get_weekly_plan_template(date)))
-   
+    weekly_plan_fn = f"{logseq_path}/pages/Weekly Plan {format_date_with_ordinal(date)}.md"
+    print(weekly_plan_fn)
+    with open(weekly_plan_fn, "a") as f:
+        f.write("\n".join(get_weekly_plan_template(date)))
+    print('✅ Created Weekly Plan')
+
     for date in get_weekly_dates(date):
-        print(f"\033[92m>>> DAILY PLAN {date.strftime('%Y-%m-%d')} <<<\033[0m")
-        print("\n".join(get_daily_plan_template(date)))
+        day_journal_fn = f"{logseq_path}/journals/{date.strftime('%Y_%m_%d')}.md"
+        with open(day_journal_fn, "a") as f:
+            f.write("\n".join(get_daily_plan_template(date)))
+        print(f'✅ Created Daily Plan for {date.strftime("%b %d, %Y")}')
 
 if __name__ == "__main__":
     main()
